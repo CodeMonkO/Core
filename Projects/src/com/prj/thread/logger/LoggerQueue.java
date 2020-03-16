@@ -10,7 +10,7 @@ public final class LoggerQueue<T> {
 
 	private int count;
 
-	private static LoggerQueue<?> loggerQueue = null;
+	private static volatile LoggerQueue<?> loggerQueue = null;
 
 	private LoggerQueue() {
 		super();
