@@ -3,13 +3,22 @@ package com.prj.map.custom;
 public class TestCustomMap {
 
 	public static void main(String[] a) {
-		CustomMap<Integer, Integer> c = new CustomMap<>();
-		for(int l =0; l< 100000; l++) {
+		Map<Integer, Integer> c = new CustomMap<>();
+		for(int l =0; l< 170000; l++) {
 			c.put(l,l);
-			if(l==100) {
-				c.remove(99);
-			}
 		}
+		
+		for(Integer m: c.getKeySet()) {
+			System.out.println("KEY : "+m+" VAL : "+c.get(m));
+		}
+		
+		System.out.println(c.size());
+		
+		for(Integer m: c.getKeySet()) {
+			c.remove(m);
+			System.out.println("KEY : "+m+" REM");
+		}
+		
 		System.out.println(c.size());
 	}
 }

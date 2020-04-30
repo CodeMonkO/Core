@@ -1,16 +1,19 @@
 package com.prj.map.custom;
 
-public class CustomMap<K extends Comparable<K>, V> implements Map<K, V> {
+import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListSet;
+
+public final class CustomMap<K extends Comparable<K>, V> implements Map<K, V> {
 
 	private K k = null;
 	private int n = 16;
-	private int buckets = 0;
-	private int numBuckets = 16;
+	private int bucketsUsed = 0;
+	private int buckets = 16;
+	private double loadFactor = 0.75;
 	private long size;
-
-	private SplayTree<K, V>[] l = new SplayTree[numBuckets];
-
-	SplayTree<K, V> st = null;
+	private SplayTree<K, V>[] l = new SplayTree[buckets];
+	private SplayTree<K, V> st = null;
+	private Set<K> keyset = new ConcurrentSkipListSet<K>();
 
 	@Override
 	public long size() {
@@ -18,30 +21,31 @@ public class CustomMap<K extends Comparable<K>, V> implements Map<K, V> {
 	}
 
 	@Override
-	public void put(K k, V v) {
-		// TODO Auto-generated method stub
+	public void put(final K k, final V v) {
 		this.k = k;
-		int capacity = (int) (numBuckets * 0.75);
-		if (buckets == capacity) {
-			buckets = buckets * 2;
-			SplayTree<K, V>[] l = new SplayTree[buckets];
-			for (int i = 0; i < buckets / 2; i++) {
+		final int capacity = (int) (buckets * loadFactor);
+		if (bucketsUsed == capacity) {
+			bucketsUsed = bucketsUsed * 2;
+			final SplayTree<K, V>[] l = new SplayTree[bucketsUsed];
+			for (int i = 0; i < bucketsUsed / 2; i++) {
 				l[i] = this.l[i];
 			}
 			this.l = l;
-			this.numBuckets = buckets;
+			this.buckets = bucketsUsed;
 		}
 
-		int index = hashCode() & (n - 1);
+		final int index = hashCode() & (n - 1);
 		if (l[index] == null) {
 			// insert root
 			st = new SplayTree<K, V>();
 			st.put(k, v);
+			keyset.add(k);
 			l[index] = st;
-			buckets++;
+			bucketsUsed++;
 		} else {
 			st = l[index];
 			st.put(k, v);
+			keyset.add(k);
 			// collision is handled inside SplayTree
 		}
 		size++;
@@ -49,9 +53,8 @@ public class CustomMap<K extends Comparable<K>, V> implements Map<K, V> {
 
 	@Override
 	public V get(K k) {
-		// TODO Auto-generated method stub
 		this.k = k;
-		int index = hashCode() & (n - 1);
+		final int index = hashCode() & (n - 1);
 		V v = null;
 		if (l[index] != null) {
 			v = l[index].get(k);
@@ -66,13 +69,18 @@ public class CustomMap<K extends Comparable<K>, V> implements Map<K, V> {
 
 	@Override
 	public void remove(K k) {
-		// TODO Auto-generated method stub
 		this.k = k;
 		int index = hashCode() & (n - 1);
 		if (l[index] != null) {
-			if(l[index].remove(k));
+			if (l[index].remove(k)) {
+				keyset.remove(k);
 				size--;
+			}
 		}
 	}
 
+	@Override
+	public Set<K> getKeySet() {
+		return keyset;
+	}
 }
